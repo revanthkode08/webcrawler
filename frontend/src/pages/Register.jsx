@@ -4,12 +4,13 @@ import { AuthContext } from '../context/AuthContext';
 import { authFetch } from '../api/client';
 import './Auth.css';
 
+const DEFAULT_ADMIN_CODE = 'nutchflow_admin_2026';
+
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [adminCode, setAdminCode] = useState('');
-  const [showAdminCode, setShowAdminCode] = useState(false);
   const [error, setError] = useState('');
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -25,21 +26,18 @@ const Register = () => {
           username, 
           email, 
           password, 
-          ...(showAdminCode && adminCode.trim() ? { adminCode: adminCode.trim() } : {})
+          ...(adminCode.trim() ? { adminCode: adminCode.trim() } : {})
         })
       });
-      if (data) {
-        login(data.token);
-        if (data.user?.role === 'admin') {
-          navigate('/dashboard');
-        } else {
-          navigate('/home');
-        }
+      login(data.token);
+      if (data.user?.role === 'admin') {
+        navigate('/dashboard');
       } else {
-        setError(data.message || 'Registration failed');
+        navigate('/home');
       }
     } catch (err) {
-      setError('Network error');
+      console.error('Registration error:', err);
+      setError(err.data?.message || err.message || 'Registration failed');
     }
   };
 
@@ -80,30 +78,18 @@ const Register = () => {
             />
           </div>
 
-          <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              <input 
-                type="checkbox" 
-                checked={showAdminCode} 
-                onChange={() => setShowAdminCode(!showAdminCode)}
-                style={{ marginRight: '0.5rem', cursor: 'pointer' }}
-              />
-              Register as Administrator
-            </label>
+          <div className="form-group">
+            <label>Admin Access Code</label>
+            <input 
+              type="text" 
+              value={adminCode} 
+              onChange={(e) => setAdminCode(e.target.value)} 
+              placeholder="Enter admin code if registering as administrator"
+            />
+            <small className="auth-note">
+              Use this code to register as an administrator: <strong>{DEFAULT_ADMIN_CODE}</strong>
+            </small>
           </div>
-
-          {showAdminCode && (
-            <div className="form-group slide-down">
-              <label>Admin Access Code</label>
-              <input 
-                type="password" 
-                value={adminCode} 
-                onChange={(e) => setAdminCode(e.target.value)} 
-                placeholder="Enter secret code..."
-                required={showAdminCode}
-              />
-            </div>
-          )}
 
           <button type="submit" className="btn btn-primary btn-block">Register</button>
         </form>

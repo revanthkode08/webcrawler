@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const BASE_URL = import.meta.env.VITE_API_URL || 'https://webcrawler-nu40.onrender.com';
 
 export const authFetch = async (endpoint, token, options = {}) => {
   const url = `${BASE_URL}${endpoint}`;

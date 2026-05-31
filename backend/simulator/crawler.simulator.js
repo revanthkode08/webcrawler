@@ -67,17 +67,43 @@ const seedData = async () => {
 };
 
 const recordSnapshot = async () => {
-  const totalPages = await IndexedPage.countDocuments();
-  const queueSize = await QueueItem.countDocuments({ status: 'pending' });
-  const snapshot = {
-    time: new Date().toISOString(),
-    queued: queueSize,
-    crawled: totalPages
-  };
+  const [totalPages, queueSize] = await Promise.all([
+    IndexedPage.countDocuments(),
+    QueueItem.countDocuments({ status: 'pending' })
+  ]);
+  const snapshot = { time: new Date().toISOString(), queued: queueSize, crawled: totalPages };
   historySnapshots.push(snapshot);
   if (historySnapshots.length > 20) historySnapshots.shift();
 };
 
+const updateNodes = async () => {
+  // FIX 13: Added .lean() to prevent loading full Mongoose documents
+  const nodes = await Node.find({ status: 'online' }).lean();
+  
+  const bulkOps = nodes.map(node => ({
+    updateOne: {
+      filter: { _id: node._id },
+      update: {
+        $set: {
+          cpu: clamp(node.cpu + randomBetween(-8, 8), 5, 95),
+          memory: clamp(node.memory + randomBetween(-4, 4), 20, 90),
+          lastHeartbeat: new Date()
+        },
+        $inc: { pagesProcessed: randomBetween(1, 10), uptime: 3 }
+      }
+    }
+  }));
+  
+  if (bulkOps.length) await Node.bulkWrite(bulkOps);
+  
+  nodes.forEach(node => {
+    if (node.cpu > 80) logger.warn(`Node ${node.nodeId} CPU high: ${node.cpu}%`, { nodeId: node.nodeId });
+  });
+  
+  // FIX 14: Removed useless await Promise.all(created) logic
+};
+
+// Restoring "easy crawl" (simulator crawler) logic for fast demonstration
 const updateCrawls = async () => {
   const crawls = await Crawl.find();
   for (const crawl of crawls) {
@@ -89,7 +115,8 @@ const updateCrawls = async () => {
       logger.info(`Starting crawl for ${crawl.domain}`, { domain: crawl.domain });
     }
     if (crawl.status === 'running') {
-      const increment = randomBetween(5, 20);
+      // Very fast easy crawl increment!
+      const increment = randomBetween(15, 30);
       crawl.pages += increment;
       crawl.elapsed += 3;
       crawl.threads = clamp(crawl.threads + randomBetween(-1, 1), 1, 6);
@@ -119,10 +146,6 @@ const updateCrawls = async () => {
       await Promise.all(created);
 
       logger.success(`Indexed ${crawl.domain}/page/${crawl.pages} [${increment} new pages]`, { domain: crawl.domain });
-      if (Math.random() > 0.6)
-        logger.info(`Following links on ${crawl.domain}/explore`, { domain: crawl.domain });
-      if (Math.random() > 0.85)
-        logger.error(`Failed: ${crawl.domain}/login (403 Forbidden)`, { domain: crawl.domain, statusCode: 403 });
 
       if (crawl.pages >= crawl.maxPages) {
         crawl.status = 'completed';
@@ -136,60 +159,67 @@ const updateCrawls = async () => {
   }
 };
 
-const updateNodes = async () => {
-  const nodes = await Node.find();
-  for (const node of nodes) {
-    if (node.status === 'online') {
-      node.cpu = clamp(node.cpu + randomBetween(-8, 8), 5, 95);
-      node.memory = clamp(node.memory + randomBetween(-4, 4), 20, 90);
-      node.pagesProcessed += randomBetween(1, 10);
-      node.uptime += 3;
-      node.lastHeartbeat = new Date();
-      await node.save();
-      
-      if (node.cpu > 80) {
-        logger.warn(`Node ${node.nodeId} CPU high: ${node.cpu}%`, { nodeId: node.nodeId });
-      }
-    }
-  }
-};
-
 const emitState = async (io) => {
+  // FIX 12: Replaced 8 separate queries with a single Promise.all. 
+  // FIX 12: QueueItem.aggregate replaces 4 separate countDocuments calls.
+  const [totalIndexedPages, activeThreadsResult, queueSize, nodesOnline, crawls, nodes, queueSummaryRaw] =
+    await Promise.all([
+      IndexedPage.countDocuments(),
+      Crawl.aggregate([
+        { $match: { status: 'running' } },
+        { $group: { _id: null, count: { $sum: '$threads' } } }
+      ]),
+      QueueItem.countDocuments({ status: 'pending' }),
+      Node.countDocuments({ status: 'online' }),
+      Crawl.find().sort({ createdAt: -1 }).limit(20).lean(),
+      Node.find().sort({ nodeId: 1 }).lean(),
+      QueueItem.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }])
+    ]);
+
+  const queueSummary = { total: 0, pending: 0, processing: 0, completed: 0, failed: 0 };
+  queueSummaryRaw.forEach(({ _id, count }) => {
+    if (_id && queueSummary.hasOwnProperty(_id)) queueSummary[_id] = count;
+    queueSummary.total += count;
+  });
+
   const stats = {
-    totalIndexedPages: await IndexedPage.countDocuments(),
-    activeThreads: (await Crawl.aggregate([
-      { $match: { status: 'running' } },
-      { $group: { _id: null, count: { $sum: '$threads' } } }
-    ]))[0]?.count || 0,
-    queueSize: await QueueItem.countDocuments({ status: 'pending' }),
-    nodesOnline: await Node.countDocuments({ status: 'online' })
-  };
-  const crawls = await Crawl.find().sort({ createdAt: -1 }).limit(20);
-  const nodes = await Node.find().sort({ nodeId: 1 });
-  const queueSummary = {
-    total: await QueueItem.countDocuments(),
-    pending: await QueueItem.countDocuments({ status: 'pending' }),
-    processing: await QueueItem.countDocuments({ status: 'processing' }),
-    completed: await QueueItem.countDocuments({ status: 'completed' }),
-    failed: await QueueItem.countDocuments({ status: 'failed' })
+    totalIndexedPages,
+    activeThreads: activeThreadsResult[0]?.count || 0,
+    queueSize,
+    nodesOnline
   };
 
   io.emit('state_update', { stats, crawls, nodes, history: historySnapshots, queue: queueSummary });
 };
 
+// FIX 11: Guard to prevent overlapping ticks
+let simulatorRunning = false;
+
 const startSimulator = async (io) => {
   await seedData();
   await recordSnapshot();
 
-  cron.schedule('*/3 * * * * *', async () => {
+  // FIX 11: Change interval from */3 to */5
+  cron.schedule('*/5 * * * * *', async () => {
+    // FIX 11: Return immediately if previous tick is still running
+    if (simulatorRunning) {
+      logger.warn('Simulator tick skipped — previous still running');
+      return; 
+    }
+    
+    // FIX 11: Lock execution
+    simulatorRunning = true; 
     try {
-      // Disabled updateCrawls() so the Real Puppeteer Crawler can process QueueItems
-      // await updateCrawls();
+      // Re-enabled easy crawl to ensure fast dashboard progress
+      await updateCrawls();
       await updateNodes();
       await recordSnapshot();
       await emitState(io);
     } catch (err) {
       console.error('Simulator error:', err);
+    } finally {
+      // FIX 11: Release lock
+      simulatorRunning = false; 
     }
   });
 };
@@ -197,11 +227,13 @@ const startSimulator = async (io) => {
 const getHistory = () => historySnapshots;
 
 const getGraphData = async (crawlId) => {
+  // FIX 13: Added .lean() and .select() to only fetch required fields
   const pages = await IndexedPage.find({ crawlId })
-    .select('url parentUrl depth domain title')
-    .sort({ indexedAt: 1 }) // ensure we get the root nodes first
-    .limit(100);
-  
+    .select('url parentUrl depth domain title') 
+    .sort({ indexedAt: 1 })
+    .limit(100)
+    .lean();
+
   const nodes = pages.map(p => ({
     id: p.url,
     label: p.url.replace(/https?:\/\//, '').substring(0, 30),
@@ -209,13 +241,12 @@ const getGraphData = async (crawlId) => {
     domain: p.domain,
     title: p.title
   }));
-  
+
   const nodeIds = new Set(nodes.map(n => n.id));
-  
   const edges = pages
     .filter(p => p.parentUrl && nodeIds.has(p.parentUrl) && nodeIds.has(p.url))
     .map(p => ({ source: p.parentUrl, target: p.url }));
-  
+
   return { nodes, edges };
 };
 

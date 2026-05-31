@@ -64,7 +64,7 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/search/trending')
+    axios.get('https://webcrawler-nu40.onrender.com/api/search/trending')
       .then(res => setTrending(res.data))
       .catch(console.error)
   }, [])
@@ -94,7 +94,7 @@ export default function Home() {
     setSuggestionsLoading(true)
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/search/suggestions?q=${q}`
+        `https://webcrawler-nu40.onrender.com/api/search/suggestions?q=${q}`
       )
       setSuggestions(res.data)
     } catch(e) {
@@ -128,7 +128,7 @@ export default function Home() {
     try {
       const startTime = performance.now()
       const Res = await axios.get(
-        `http://localhost:5000/api/search?q=${q}&page=${pageToFetch}&limit=10&domain=${DomainFilter}&category=${CategoryFilter}&sort=${SortBy}`
+        `https://webcrawler-nu40.onrender.com/api/search?q=${q}&page=${pageToFetch}&limit=10&domain=${DomainFilter}&category=${CategoryFilter}&sort=${SortBy}`
       )
       const endTime = performance.now()
       
@@ -147,7 +147,7 @@ export default function Home() {
       setHasSearched(true)
       
       const related = await axios.get(
-        `http://localhost:5000/api/search/related?q=${q}&limit=5`
+        `https://webcrawler-nu40.onrender.com/api/search/related?q=${q}&limit=5`
       )
       setRelatedSearches(related.data)
 

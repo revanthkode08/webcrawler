@@ -9,6 +9,7 @@ const generateToken = (id) => {
 
 exports.register = async (req, res, next) => {
   try {
+    console.log('Register request body:', req.body);
     const { username, email, password, adminCode } = req.body;
     if (!username || !email || !password) {
       return res.status(400).json({ message: 'Username, email, and password are required.' });
@@ -34,6 +35,7 @@ exports.register = async (req, res, next) => {
       }
     });
   } catch (err) {
+    console.error('Register error:', err.message || err);
     next(err);
   }
 };

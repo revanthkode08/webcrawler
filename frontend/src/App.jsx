@@ -25,7 +25,7 @@ import UserAccount from './pages/user/UserAccount';
 
 const RootRedirect = () => {
   const { user, token } = useContext(AuthContext);
-  if (!token) return <Home />;
+  if (!token) return <Navigate to="/home" replace />;
   if (user?.role === 'admin') return <Navigate to="/dashboard" replace />;
   return <Navigate to="/home" replace />;
 };

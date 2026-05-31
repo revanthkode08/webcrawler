@@ -16,7 +16,7 @@ export const SocketProvider = ({ children }) => {
   const { addToast } = useToast();
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000');
+    const newSocket = io('https://webcrawler-nu40.onrender.com');
     setSocket(newSocket);
 
     newSocket.on('connect', () => setConnected(true));

@@ -113,8 +113,7 @@ class CrawlerService {
         // Update stats
         await this.incrementStats(1, newQueued - 1); // -1 because we completed 1 job
         
-        // Politeness delay
-        await new Promise(r => setTimeout(r, 1000));
+        // Politeness delay removed to ensure high speed crawling
 
       } catch (err) {
         console.error(`[Worker ${process.pid}] Failed to crawl ${job.url}:`, err.message);
