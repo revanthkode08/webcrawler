@@ -42,7 +42,7 @@ const ResultCard = ({ result, isBookmarked, onBookmark }) => {
 
   return (
     <div 
-      onClick={() => navigate(`/page/${result._id}`)}
+      onClick={() => window.open(result.url, '_blank')}
       style={{
         padding: '1.25rem', background: 'var(--glass-bg)',
         border: '1px solid var(--glass-border)',
@@ -80,13 +80,27 @@ const ResultCard = ({ result, isBookmarked, onBookmark }) => {
       </div>
 
       <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontWeight: 500 }}>
-        <span style={{ color: 'var(--link-color, #7ab4f5)', textDecoration: 'none' }}>
+        <a 
+          href={result.url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          style={{ color: 'var(--link-color, #7ab4f5)', textDecoration: 'none' }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {renderHighlight(result.title)}
-        </span>
+        </a>
       </h3>
       
       <p style={{ fontSize: '0.85rem', color: 'var(--url-color, #5a9e6a)', margin: '0 0 0.6rem 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-        {result.url}
+        <a 
+          href={result.url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ color: 'inherit', textDecoration: 'none' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {result.url}
+        </a>
       </p>
 
       <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0.85rem' }}>
