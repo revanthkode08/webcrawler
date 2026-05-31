@@ -4,6 +4,8 @@ import { useToast } from './ToastContext';
 
 export const SocketContext = createContext();
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://webcrawler-nu40.onrender.com';
+
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -16,7 +18,13 @@ export const SocketProvider = ({ children }) => {
   const { addToast } = useToast();
 
   useEffect(() => {
-    const newSocket = io('https://webcrawler-nu40.onrender.com');
+    const newSocket = io(BASE_URL, { 
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
+    });
     setSocket(newSocket);
 
     newSocket.on('connect', () => setConnected(true));

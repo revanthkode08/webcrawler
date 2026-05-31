@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search as SearchIcon, X, History } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../../api/client';
 
 const SearchBar = ({ 
   size = 'large', 
@@ -41,7 +42,7 @@ const SearchBar = ({
     }
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(val.trim())}`);
+        const res = await fetch(`${BASE_URL}/api/search/suggestions?q=${encodeURIComponent(val.trim())}`);
         if (res.ok) {
           const data = await res.json();
           setSuggestions(Array.isArray(data) ? data : []);

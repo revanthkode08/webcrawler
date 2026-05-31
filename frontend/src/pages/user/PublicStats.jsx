@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserNavbar from '../../components/user/UserNavbar';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BASE_URL } from '../../api/client';
 import './PublicStats.css';
 
 const CountUp = ({ value, duration = 1200 }) => {
@@ -32,7 +33,7 @@ const PublicStats = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('/api/public/stats');
+      const res = await fetch(`${BASE_URL}/api/public/stats`);
       if (res.ok) {
         setStats(await res.json());
       }
@@ -41,7 +42,7 @@ const PublicStats = () => {
 
   const fetchRecent = async () => {
     try {
-      const res = await fetch('/api/search?limit=10&sort=date');
+      const res = await fetch(`${BASE_URL}/api/search?limit=10&sort=date`);
       if (res.ok) {
         const d = await res.json();
         setRecentLive(d.results || []);

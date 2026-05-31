@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import UserNavbar from '../../components/user/UserNavbar';
 import SearchBar from '../../components/user/SearchBar';
 import DomainChip from '../../components/user/DomainChip';
+import { BASE_URL } from '../../api/client';
 import './UserHome.css';
 
 const UserHome = () => {
@@ -12,12 +13,12 @@ const UserHome = () => {
 
   const fetchStats = async () => {
     try {
-      const ms = await fetch('/api/public/stats');
+      const ms = await fetch(`${BASE_URL}/api/public/stats`);
       if (ms.ok) {
         const data = await ms.json();
         setStats({ totalPages: data.totalPages, totalDomains: data.totalDomains });
       }
-      const trendReq = await fetch('/api/search/trending');
+      const trendReq = await fetch(`${BASE_URL}/api/search/trending`);
       if (trendReq.ok) {
         const tData = await trendReq.json();
         setTrending(tData);

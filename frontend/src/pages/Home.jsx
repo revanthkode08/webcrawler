@@ -4,6 +4,7 @@ import { useLocation, Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, Loader2, Link2, ExternalLink, Activity, Clock, Plus, Command, Hash, Building2, FileText, TrendingUp, Filter, ArrowUpDown } from "lucide-react"
 import AiSearchSummary from "../components/user/AiSearchSummary"
+import { BASE_URL } from "../api/client"
 
 const TYPE_ICONS = {
   keyword:  <Search className="h-3.5 w-3.5 text-muted-foreground" />,
@@ -64,7 +65,7 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    axios.get('https://webcrawler-nu40.onrender.com/api/search/trending')
+    axios.get(`${BASE_URL}/api/search/trending`)
       .then(res => setTrending(res.data))
       .catch(console.error)
   }, [])
@@ -94,7 +95,7 @@ export default function Home() {
     setSuggestionsLoading(true)
     try {
       const res = await axios.get(
-        `https://webcrawler-nu40.onrender.com/api/search/suggestions?q=${q}`
+        `${BASE_URL}/api/search/suggestions?q=${q}`
       )
       setSuggestions(res.data)
     } catch(e) {
@@ -128,7 +129,7 @@ export default function Home() {
     try {
       const startTime = performance.now()
       const Res = await axios.get(
-        `https://webcrawler-nu40.onrender.com/api/search?q=${q}&page=${pageToFetch}&limit=10&domain=${DomainFilter}&category=${CategoryFilter}&sort=${SortBy}`
+        `${BASE_URL}/api/search?q=${q}&page=${pageToFetch}&limit=10&domain=${DomainFilter}&category=${CategoryFilter}&sort=${SortBy}`
       )
       const endTime = performance.now()
       
@@ -147,7 +148,7 @@ export default function Home() {
       setHasSearched(true)
       
       const related = await axios.get(
-        `https://webcrawler-nu40.onrender.com/api/search/related?q=${q}&limit=5`
+        `${BASE_URL}/api/search/related?q=${q}&limit=5`
       )
       setRelatedSearches(related.data)
 

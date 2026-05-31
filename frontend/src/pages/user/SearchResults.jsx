@@ -5,7 +5,7 @@ import ResultCard from '../../components/user/ResultCard';
 import DomainChip from '../../components/user/DomainChip';
 import AiSearchSummary from '../../components/user/AiSearchSummary';
 import { AuthContext } from '../../context/AuthContext';
-import { authFetch } from '../../api/client';
+import { authFetch, BASE_URL } from '../../api/client';
 import './SearchResults.css';
 
 const SearchResults = () => {
@@ -32,7 +32,7 @@ const SearchResults = () => {
       const start = Date.now();
       try {
         const u = new URLSearchParams({ q: query, page, sort, ...(domain ? { domain } : {}) });
-        const res = await fetch(`/api/search?${u.toString()}`);
+        const res = await fetch(`${BASE_URL}/api/search?${u.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setResults(data.results || []);
@@ -55,7 +55,7 @@ const SearchResults = () => {
   }, [query, page, sort, domain, user, token]);
 
   useEffect(() => {
-    fetch('/api/search/trending').then(r=>r.json()).then(setTopDomains).catch(()=>null);
+    fetch(`${BASE_URL}/api/search/trending`).then(r=>r.json()).then(setTopDomains).catch(()=>null);
     if (token) {
       authFetch('/api/account', token).then(data => {
         if (data && data.bookmarks) {
