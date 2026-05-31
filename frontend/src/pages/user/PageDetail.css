@@ -1,0 +1,19 @@
+.page-detail-layout {
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-primary);
+}
+.page-detail-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.related-card {
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.related-card:hover {
+  border-color: var(--accent-color);
+  transform: translateX(4px);
+}

@@ -1,0 +1,50 @@
+.domain-explorer-page {
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-primary);
+}
+.domain-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.domain-header-card {
+  margin-bottom: 2rem;
+  padding: 2rem 1.5rem;
+}
+.domain-tools {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.domain-filter-input {
+  flex: 1;
+  min-width: 250px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  color: var(--text-primary);
+  outline: none;
+}
+.domain-sort-select {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  color: var(--text-primary);
+  outline: none;
+}
+.domain-row {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.domain-row:last-child {
+  border-bottom: none;
+}
+.domain-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}

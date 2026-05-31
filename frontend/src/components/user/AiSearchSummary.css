@@ -1,0 +1,80 @@
+.ai-summary-container {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-left: 4px solid #bc70ff; /* Purple accent to denote AI */
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+  animation: slideFadeIn 0.5s ease;
+}
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ai-sparkle-icon {
+  color: #bc70ff;
+  animation: gentlePulse 2s infinite;
+}
+
+.ai-summary-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  background: -webkit-linear-gradient(45deg, #a78bfa, #f472b6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.5px;
+}
+
+.ai-summary-content {
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+.ai-text {
+  margin: 0;
+  color: #e2e8f0;
+}
+
+.ai-error {
+  color: #ef4444;
+  font-size: 0.9rem;
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gentlePulse {
+  0% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.8; transform: scale(1); }
+}

@@ -1,0 +1,97 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+const connectDB = require('./config/db');
+const errorHandler = require('./middleware/error.middleware');
+const authRoutes = require('./routes/auth.routes');
+const crawlRoutes = require('./routes/crawl.routes');
+const nodeRoutes = require('./routes/node.routes');
+const indexRoutes = require('./routes/index.routes');
+const queueRoutes = require('./routes/queue.routes');
+const searchRoutes = require('./routes/search.routes');
+const logger = require('./services/logger.service');
+const { loadAllSchedules } = require('./services/scheduler.service');
+
+const { startSimulator } = require('./simulator/crawler.simulator');
+const realCrawler = require('./services/realCrawler.service');
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+  }
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
+app.use(express.json());
+
+
+app.use('/api/auth', authRoutes);
+app.use('/api/crawls', crawlRoutes);
+app.use('/api/nodes', nodeRoutes);
+app.use('/api/index', indexRoutes);
+app.use('/api/queue', queueRoutes);
+app.use('/api/search', require('./routes/search.routes'));
+app.use('/api/public', require('./routes/search.routes'));
+app.use('/api/domain', require('./routes/search.routes'));
+app.use('/api/page', require('./routes/search.routes'));
+app.use('/api/account', require('./routes/userAccount.routes'));
+app.use('/api/graph', require('./routes/graph.routes'));
+app.use('/api/schedules', require('./routes/schedule.routes'));
+app.use('/api/logs', require('./routes/logs.routes'));
+
+app.use(errorHandler);
+
+io.on('connection', (socket) => {
+  logger.setIO(io);
+  console.log('Client connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+const startApp = async () => {
+  await connectDB();
+  
+  const ensureIndexes = async () => {
+    try {
+      const mongoose = require('mongoose');
+      const db = mongoose.connection.db;
+      const col = db.collection('indexedpages');
+      const indexes = await col.indexes();
+      const hasTextIndex = indexes.some(idx =>
+        Object.values(idx.key || {}).includes('text')
+      );
+      if (!hasTextIndex) {
+        await col.createIndex(
+          { title: 'text', url: 'text', domain: 'text' },
+          { name: 'search_text_index' }
+        );
+        console.log('✓ Text index auto-created on indexedpages');
+      }
+    } catch (e) {
+      console.warn('Could not auto-create text index:', e.message);
+    }
+  };
+
+  await ensureIndexes();
+  
+  logger.setIO(io);
+  await startSimulator(io);
+  await loadAllSchedules(io);
+  
+  // Start the REAL Puppeteer crawling worker
+  realCrawler.start();
+
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+};
+
+startApp();
