@@ -100,9 +100,9 @@ class RealCrawlerService {
   async pollFastQueue() {
     if (!this.isRunning) return;
 
-    // FIX 7: Reduce fastWorkers max concurrency from 10 to 5 -> changed to 30 to make it extremely fast
-    if (this.fastWorkers >= 30) {
-      this.scheduleFastPoll(200);
+    // FIX 7: Reduced concurrency from 30 to 5 to prevent CPU overload and allow Node-Cron to execute
+    if (this.fastWorkers >= 5) {
+      this.scheduleFastPoll(500);
       return;
     }
 
@@ -114,17 +114,17 @@ class RealCrawlerService {
       );
 
       if (!item) {
-        this.scheduleFastPoll(500);
+        this.scheduleFastPoll(1000);
         return;
       }
 
       this.fastWorkers++;
       this.processFastItem(item).finally(() => {
         this.fastWorkers--;
-        this.scheduleFastPoll(10);
+        this.scheduleFastPoll(100);
       });
 
-      this.scheduleFastPoll(20);
+      this.scheduleFastPoll(100);
     } catch (err) {
       logger.error('Fast queue poll error:', err.message);
       this.scheduleFastPoll(5000);
@@ -237,9 +237,9 @@ class RealCrawlerService {
   async pollPuppeteerQueue() {
     if (!this.isRunning) return;
 
-    // FIX 7: Reduce activeWorkers max concurrency from 3 to 2 -> changed to 10 to make it extremely fast
-    if (this.activeWorkers >= 10) {
-      this.schedulePuppeteerPoll(500);
+    // FIX 7: Reduced concurrency from 10 to 2 to prevent CPU overload and allow Node-Cron to execute
+    if (this.activeWorkers >= 2) {
+      this.schedulePuppeteerPoll(1000);
       return;
     }
 
@@ -251,7 +251,7 @@ class RealCrawlerService {
       );
 
       if (!pageToProcess) {
-        this.schedulePuppeteerPoll(500);
+        this.schedulePuppeteerPoll(1000);
         return;
       }
 
@@ -266,10 +266,10 @@ class RealCrawlerService {
           this.launchBrowser().catch(err => logger.error('Browser recycle failed:', err));
         }
 
-        this.schedulePuppeteerPoll(50);
+        this.schedulePuppeteerPoll(200);
       });
 
-      this.schedulePuppeteerPoll(100);
+      this.schedulePuppeteerPoll(200);
     } catch (err) {
       logger.error('Error in Puppeteer poller:', err);
       this.schedulePuppeteerPoll(5000);
