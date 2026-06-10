@@ -1,8 +1,8 @@
-# 🕸️ Nutchflow
+# 🕸️ Webcrawler
 
 [![Deployment](https://img.shields.io/badge/Vercel-Deployed-success?logo=vercel)](https://webcrawler-red.vercel.app/home)
 
-**Nutchflow** is a full-stack, distributed web scraping and crawling application. It features a powerful Node.js backend leveraging Puppeteer and Cheerio for efficient data extraction, paired with a dynamic React frontend for intuitive data visualization and management.
+**Webcrawler** is a full-stack, distributed web scraping and crawling application. It features a powerful Node.js backend leveraging Puppeteer and Cheerio for efficient data extraction, paired with a dynamic React frontend for intuitive data visualization and management.
 
 ---
 
