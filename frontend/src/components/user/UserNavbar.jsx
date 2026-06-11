@@ -46,7 +46,7 @@ const UserNavbar = ({ hideSearch = false, initialQuery = '' }) => {
                 </button>
               )}
               <button className="user-avatar-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
-                {user.username.charAt(0).toUpperCase()}
+                {user?.username?.charAt(0)?.toUpperCase() || 'U'}
               </button>
               {dropdownOpen && (
                 <div className="user-dropdown">

@@ -74,7 +74,7 @@ const UserAccount = () => {
         
         <div className="glass-panel account-hero">
           <div className="account-avatar">
-            {user.username.charAt(0).toUpperCase()}
+            {user?.username?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <div>
             <h1 style={{ margin: '0 0 0.25rem 0' }}>Welcome back, {user.username}</h1>
