@@ -1,4 +1,4 @@
-# Nutchflow Frontend
+# Webcrawler Frontend
 
 The user interface for the Nutchflow application, built to visualize crawled data and manage scraping tasks.
 
